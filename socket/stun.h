@@ -17,8 +17,9 @@ extern "C" {
 #include <netdb.h>
 #include "utility.h"
 
-//STUN
-//Binding Request and Binding Response. Shared Secret Request and Shared Secret Response
+/** @brief STUN
+ Binding Request and Binding Response.
+ Shared Secret Request and Shared Secret Response **/
 
 int get_public_addr_info(const char *stun_server_ip, uint16_t stun_server_port, uint16_t client_port, struct connect_addr_info **info);
 

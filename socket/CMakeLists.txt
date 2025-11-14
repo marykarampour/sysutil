@@ -1,4 +1,5 @@
-set(SOCK_SOURCE
+set(
+        SOCK_SOURCE
         Receiver.cpp
         Sender.cpp
         senderreceiver.c

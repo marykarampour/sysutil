@@ -3,6 +3,7 @@
 //
 
 #include <future>
+#include <iostream>
 #include <catch2/catch_test_macros.hpp>
 #include "Receiver.hpp"
 
@@ -18,6 +19,7 @@ TEST_CASE("Receiver Get", "[get]") {
 
     f.wait();
     std::string str = f.get();
+    std::cout << "Data from sender -> " << str << std::endl;
     REQUIRE(str.empty() == false);
     t.join();
 }

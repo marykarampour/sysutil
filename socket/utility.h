@@ -25,7 +25,8 @@ struct connect_addr_info {
     int socket;
     const char *private_ip;
     const char *public_ip;
-    uint16_t port;
+    uint16_t private_port;
+    uint16_t public_port;
 };
 
 const char * int_to_string(int i, size_t size);

@@ -17,14 +17,13 @@ class Receiver {
     
     int m_listener_port;
     std::string m_listener_address;
-    int m_buffer_size;
     
 public:
-    Receiver(std::string listener_address, int listener_port, int buffer_size)
-    :  m_listener_address(listener_address), m_listener_port(listener_port), m_buffer_size(buffer_size)
+    Receiver(std::string listener_address, int listener_port)
+    :  m_listener_address(listener_address), m_listener_port(listener_port)
     {}
     
-    std::string GetData();
+    std::string GetData(int buffer_size);
 };
 
 #endif /* Receiver_hpp */

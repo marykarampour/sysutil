@@ -15,7 +15,7 @@ extern "C" {
 #include <poll.h>
 #include "stun.h"
 
-struct connect_addr_info * create_listener_info(uint16_t port);
+struct connect_addr_info * create_listener_info(uint16_t private_port, bool use_public_ip);
 struct addrinfo * get_listener_info(int type, const char *address, uint16_t port, bool passive);
 int get_listener_socket(const char *address, uint16_t port);
 int create_client_socket(int listener_sock);

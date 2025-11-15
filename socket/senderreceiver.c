@@ -12,20 +12,20 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-struct connect_addr_info * create_listener_info(uint16_t port) {
+struct connect_addr_info * create_listener_info(uint16_t private_port, bool use_public_ip) {
     
     struct connect_addr_info *stun_info = (struct connect_addr_info *)malloc(sizeof(struct connect_addr_info));
-    int result = get_public_addr_info("74.125.250.129", 19302, port, &stun_info);
-    
-    if (result < 0) {
-        fprintf(stderr, "Failed to get listener address -> %s\n", gai_strerror(errno));
-        return NULL;
+    if (use_public_ip) {
+        int result = get_public_addr_info("74.125.250.129", 19302, private_port, &stun_info);
+        if (result < 0) {
+            fprintf(stderr, "Failed to get listener address\n");
+        }
     }
     
     struct addrinfo *bind_info;
     int sock = -1;
     int yes = 1;
-    struct addrinfo *private_addr = get_listener_info(AF_INET, NULL, port, true);
+    struct addrinfo *private_addr = get_listener_info(AF_INET, NULL, private_port, true);
     if (private_addr == NULL) {
         return NULL;
     }
@@ -54,13 +54,19 @@ struct connect_addr_info * create_listener_info(uint16_t port) {
     
     struct connect_addr_info *info = malloc(sizeof(struct connect_addr_info));
     info->socket = sock;
-    info->port = port;
+    info->private_port = private_port;
+    info->public_port = stun_info->public_port;
     info->private_ip = private_ip;
     info->public_ip = stun_info->public_ip;
     
     freeaddrinfo(private_addr);
-    
-    printf("Created new listener with public ip: %s private ip: %s on socket %d\n", info->public_ip, info->private_ip, info->socket);
+
+    printf("Created new listener\n");
+    if (info->public_ip)
+        printf("Public ip: %s\n", info->public_ip);
+    if (info->private_ip)
+        printf("Private ip: %s\n", info->private_ip);
+    printf("Socket %d\n", info->socket);
     
     return info;
 }

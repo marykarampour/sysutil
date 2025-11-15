@@ -11,9 +11,9 @@
 #include <string.h>
 #include <poll.h>
 
-int Sender::Start() {
+int Sender::Start(bool usePublicIP) {
     
-    connect_addr_info *listener = create_listener_info(m_listener_port);
+    connect_addr_info *listener = create_listener_info(m_listener_port, usePublicIP);
     
     if (listener == NULL || listener->socket == -1) {
         return -1;

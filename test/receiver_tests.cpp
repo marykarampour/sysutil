@@ -12,8 +12,8 @@ TEST_CASE("Receiver Get", "[get]") {
     std::promise<std::string> res;
     std::future<std::string> f = res.get_future();
     std::thread t([&res]{
-        Receiver receiver("0.0.0.0", 8080, 1024);
-        std::string data = receiver.GetData();
+        Receiver receiver("0.0.0.0", 8080);
+        std::string data = receiver.GetData(1024);
         res.set_value(data);
     });
 

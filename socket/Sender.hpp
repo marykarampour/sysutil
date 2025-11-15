@@ -26,7 +26,7 @@ public:
     : m_listener_port(listener_port)
     {}
     
-    int Start();
+    int Start(bool usePublicIP);
     int AcceptConnection();
     void AddNewConnection(int sock);
     ssize_t SendData(int client, std::string data);

@@ -13,7 +13,7 @@ TEST_CASE("Sender Start", "[start]") {
     std::future<int> f = res.get_future();
     std::thread t([&res]{
         Sender sender(8080);
-        int sock = sender.Start();
+        int sock = sender.Start(false);
         res.set_value(sock);
     });
 
@@ -25,7 +25,7 @@ TEST_CASE("Sender Start", "[start]") {
 TEST_CASE("Sender Accept", "[accept]") {
 
     Sender sender(8080);
-    sender.Start();
+    sender.Start(false);
     std::promise<int> res;
     std::future<int> f = res.get_future();
     std::thread t([&res, &sender]{
@@ -41,7 +41,7 @@ TEST_CASE("Sender Accept", "[accept]") {
 TEST_CASE("Sender Send Data", "[send]") {
 
     Sender sender(8080);
-    sender.Start();
+    sender.Start(false);
     std::promise<int> res;
     std::future<int> f = res.get_future();
     std::thread t([&res, &sender]{

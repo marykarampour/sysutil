@@ -165,7 +165,7 @@ int get_public_addr_info(const char *stun_server_ip, uint16_t stun_server_port, 
                     inet_ntop(AF_INET, &addr, ip_buff, sizeof(ip_buff));
                     
                     (*info)->public_ip = strdup(ip_buff);
-                    (*info)->port = port;
+                    (*info)->public_port = port;
                     break;
                 }
                 else {

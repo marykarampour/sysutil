@@ -23,7 +23,8 @@ int Sender::Start(bool usePublicIP) {
     
     listener_file_descriptor = {listener->socket, POLLIN};
     m_socket = listener->socket;
-    ip_address.assign(listener->public_ip);
+    if (listener->public_ip)
+        ip_address.assign(listener->public_ip);
     
     std::cout << "Sender " << ip_address << " is ready to receive requests ..." << std::endl;
     return 0;

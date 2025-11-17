@@ -26,7 +26,7 @@ int Sender::Start(bool usePublicIP) {
     if (listener->public_ip)
         ip_address.assign(listener->public_ip);
     
-    std::cout << "Sender " << ip_address << " is ready to receive requests ..." << std::endl;
+    std::cout << "Sender " << ip_address << "is ready to receive requests ..." << std::endl;
     return 0;
 }
 

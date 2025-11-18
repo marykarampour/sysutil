@@ -17,7 +17,7 @@ TEST_CASE("Sender Start", "[start]") {
 
 TEST_CASE("Sender Send Data", "[send]") {
 
-    std::thread sender_thread([&sender] {
+    std::thread sender_thread([&] {
         Sender sender(8080);
         sender.Start(false);
         int sock = sender.AcceptConnection();

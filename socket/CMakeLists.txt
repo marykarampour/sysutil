@@ -2,6 +2,7 @@ set(
         SOCK_SOURCE
         Receiver.cpp
         Sender.cpp
+        Server.cpp
         senderreceiver.c
         stun.c
         utility.c

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <catch2/catch_test_macros.hpp>
 #include "Receiver.hpp"
-#include "Sender.hpp"
+#include "Server.hpp"
 
 TEST_CASE("Sender Start", "[start]") {
 
@@ -17,9 +17,9 @@ TEST_CASE("Sender Start", "[start]") {
 
 TEST_CASE("Sender Send Data", "[send]") {
 
-    Sender sender(8080);
-    sender.Start(false);
-    std::thread sender_thread([&sender]{
+    std::thread sender_thread([&sender] {
+        Sender sender(8080);
+        sender.Start(false);
         int sock = sender.AcceptConnection();
         if (0 <= sock) {
             std::string str("Hello Client!");
@@ -28,7 +28,7 @@ TEST_CASE("Sender Send Data", "[send]") {
         }
     });
 
-    std::thread receiver_thread([&]{
+    std::thread receiver_thread([&] {
         Receiver receiver("0.0.0.0", 8080);
         std::string data = receiver.GetData(1024);
         std::cout << "Data from sender -> " << data << std::endl;
@@ -36,5 +36,19 @@ TEST_CASE("Sender Send Data", "[send]") {
     });
 
     sender_thread.join();
+    receiver_thread.join();
+}
+
+TEST_CASE("Server", "[pool]") {
+    
+    Server server(8080, false, 4);
+    
+    std::thread receiver_thread([&] {
+        Receiver receiver("0.0.0.0", 8080);
+        std::string data = receiver.GetData(1024);
+        std::cout << "Data from sender -> " << data << std::endl;
+        REQUIRE(data.empty() == false);
+    });
+    
     receiver_thread.join();
 }

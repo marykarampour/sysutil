@@ -22,11 +22,12 @@ class Sender {
     std::vector<pollfd> poll_file_descriptors;
     
 public:
+    Sender();
     Sender(int listener_port)
     : m_listener_port(listener_port)
     {}
     
-    int Start(bool usePublicIP);
+    int Start(bool use_public_ip);
     int AcceptConnection();
     void AddNewConnection(int sock);
     ssize_t SendData(int client, std::string data);

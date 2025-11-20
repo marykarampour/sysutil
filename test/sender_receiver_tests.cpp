@@ -40,15 +40,15 @@ TEST_CASE("Sender Send Data", "[send]") {
 }
 
 TEST_CASE("Server", "[pool]") {
-    
-    Server server(8080, false, 4);
-    
-    std::thread receiver_thread([&] {
+
+    Server server(8080, false);
+    std::jthread receiver_thread([&server] {
         Receiver receiver("0.0.0.0", 8080);
         std::string data = receiver.GetData(1024);
         std::cout << "Data from sender -> " << data << std::endl;
+        server.Stop();
         REQUIRE(data.empty() == false);
     });
-    
-    receiver_thread.join();
+
+    server.Start(1);
 }

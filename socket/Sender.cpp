@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <poll.h>
+#include <unistd.h>
 
 Sender::Sender() {
     Sender(false);
@@ -36,6 +37,10 @@ int Sender::Start(bool use_public_ip) {
 
 int Sender::AcceptConnection() {
     return create_client_socket(m_socket);
+}
+
+void Sender::Stop() {
+    close(m_socket);
 }
 
 std::string Sender::Address() {

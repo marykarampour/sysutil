@@ -32,7 +32,8 @@ public:
     void AddNewConnection(int sock);
     ssize_t SendData(int client, std::string data);
     void HandleRequest();
-    
+    void Stop();
+
     std::string Address();
     int Port();
 };

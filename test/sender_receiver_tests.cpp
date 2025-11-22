@@ -56,6 +56,8 @@ TEST_CASE("Server", "[pool]") {
         });
     }
 
+	std::cout << "Server done!"<< std::endl;
 	server.Stop();
+	//This is not called. REQUIRE is not thread safe.
 	REQUIRE(client_count == success_count);
 }

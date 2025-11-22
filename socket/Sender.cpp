@@ -26,7 +26,6 @@ int Sender::Start(bool use_public_ip) {
     
     listen(listener->socket, 10);
     
-    listener_file_descriptor = {listener->socket, POLLIN};
     m_socket = listener->socket;
     if (listener->public_ip)
         ip_address.assign(listener->public_ip);
@@ -49,11 +48,6 @@ std::string Sender::Address() {
 
 int Sender::Port() {
     return m_listener_port;
-}
-
-void Sender::AddNewConnection(int sock) {
-    pollfd po{sock, POLLIN, 0};
-    poll_file_descriptors.push_back(po);
 }
 
 ssize_t Sender::SendData(int client, std::string data) {

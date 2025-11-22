@@ -16,10 +16,8 @@
 class Sender {
     
     int m_listener_port;
-    pollfd listener_file_descriptor;
     int m_socket = -1;
     std::string ip_address;
-    std::vector<pollfd> poll_file_descriptors;
     
 public:
     Sender();
@@ -29,7 +27,6 @@ public:
     
     int Start(bool use_public_ip);
     int AcceptConnection();
-    void AddNewConnection(int sock);
     ssize_t SendData(int client, std::string data);
     void HandleRequest();
     void Stop();

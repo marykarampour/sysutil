@@ -126,32 +126,32 @@ int create_client_socket(int listener_sock) {
     
     if (sock == -1) {
         perror("Failed to create accept socket");
-        fprintf(stderr, "accept error -> %s\n", strerror(errno));
         return -1;
     }
     
     return sock;
 }
 
-const char * receive_data(struct pollfd poll, int buffer_size) {
+const char * receive_data(int accept_sock, int buffer_size) {
     
     char *buffer = (char *)malloc(buffer_size * sizeof(char));
-    
+    memset(buffer, 0, buffer_size);
+
     if (buffer == NULL) {
         perror("Failed to create buffer");
-        close(poll.fd);
+        close(accept_sock);
         return NULL;
     }
     
-    ssize_t bytes = recv(poll.fd, buffer, buffer_size, 0);
+    ssize_t bytes = recv(accept_sock, buffer, buffer_size, 0);
     
     if (bytes <= 0) {
         if (bytes == 0)
-            printf("Connection %d closed\n", poll.fd);
+            printf("Connection %d closed\n", accept_sock);
         else
             perror("Failed to receive data");
         
-        close(poll.fd);
+        close(accept_sock);
         return NULL;
     }
     

@@ -14,6 +14,5 @@ std::string Receiver::GetData(int buffer_size) {
     
     int sock = get_listener_socket(m_listener_address.c_str(), m_listener_port);
     if (sock == -1) return std::string();
-    pollfd po{sock, POLLIN, 0};
-    return std::string(receive_data(po, buffer_size));
+    return std::string(receive_data(sock, buffer_size));
 }

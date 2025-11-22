@@ -8,31 +8,27 @@
 #include "Server.hpp"
 #include <iostream>
 #include <format>
+#include <stop_token>
 
 ServerThread::ServerThread() {
     m_paused = false;
-    m_running = false;
     m_busy = false;
 }
 
 ServerThread::ServerThread(const ServerThread& server) {
     //TODO: Start to re-run the thread? Terminate then restart?
-    m_running.store(server.m_running.load());
     m_paused.store(server.m_paused.load());
     m_busy.store(server.m_busy.load());
 }
 
 ServerThread::~ServerThread() {
-    Stop();
 }
 
-void ServerThread::Start(Sender sender, const std::function<int()>&& stop_handler) {
-    m_running = true;
+void ServerThread::Start(Sender& sender) {
     m_thread = std::jthread([&](std::stop_token token) {
-        while (m_running) {
+        while (!token.stop_requested()) {
             if (m_paused || m_busy) return;
 
-            std::stop_callback callBack(token, stop_handler);
             m_busy = true;
             int sock = sender.AcceptConnection();
             if (0 <= sock) {
@@ -46,9 +42,9 @@ void ServerThread::Start(Sender sender, const std::function<int()>&& stop_handle
 }
 
 void ServerThread::Stop() {
-    m_running = false;
     m_thread.request_stop();
 }
+
 void ServerThread::Pause() {
     m_paused = true;
 }
@@ -70,18 +66,10 @@ Server::~Server() {
 void Server::Start(size_t pool_size) {
     m_thread_pool.clear();
     m_thread_pool.reserve(pool_size);
-    m_running_counter = pool_size;
 
     for (size_t i=0; i<pool_size; i++) {
         m_thread_pool.emplace_back();
-        m_thread_pool.back().Start(m_sender, [&] -> int {
-            m_running_counter.store(m_running_counter.load() - 1);
-			if (m_running_counter.load() <= 0) {
-				Stop();
-			}
-            std::cout << m_running_counter.load() << std::endl;//close accept socket
-            return m_running_counter.load();
-        });
+        m_thread_pool.back().Start(m_sender);
     }
 }
 

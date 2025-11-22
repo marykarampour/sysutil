@@ -155,6 +155,7 @@ const char * receive_data(int accept_sock, int buffer_size) {
         return NULL;
     }
     
+    close(accept_sock);
     return buffer;
 }
 
@@ -197,6 +198,7 @@ const char * make_http_request(const char *type, const char *host, uint16_t port
     char *str = malloc(response_size+1);
     strcpy(str, response);
     printf("http response ->\n%s", str);
+    close(sock);
     
     return str;
 }

@@ -50,7 +50,6 @@ int get_public_addr_info(const char *stun_server_ip, uint16_t stun_server_port, 
     if (sock == -1) {
         perror("Failed to create STUN socket");
         fprintf(stderr, "STUN socket error -> %s\n", strerror(errno));
-        close(sock);
         return -1;
     }
     

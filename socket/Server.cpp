@@ -31,9 +31,14 @@ void ServerThread::Start(Sender& sender) {
 
             m_busy = true;
             int sock = sender.AcceptConnection();
+            std::stop_callback callback(token, [&](){
+                close(sock);
+            });
+            
             if (0 <= sock) {
                 std::string str = std::format("Hello {}", sock);
                 sender.SendData(sock, str);
+                close(sock);
                 m_busy = false;
             }
         }

@@ -140,7 +140,7 @@ const char * receive_data(int accept_sock, int buffer_size) {
     if (buffer == NULL) {
         perror("Failed to create buffer");
         close(accept_sock);
-        return NULL;
+        return "";
     }
     
     ssize_t bytes = recv(accept_sock, buffer, buffer_size, 0);
@@ -152,7 +152,7 @@ const char * receive_data(int accept_sock, int buffer_size) {
             perror("Failed to receive data");
         
         close(accept_sock);
-        return NULL;
+        return "";
     }
     
     close(accept_sock);

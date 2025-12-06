@@ -6,8 +6,6 @@
 #include <iostream>
 #include <atomic>
 #include <catch2/catch_test_macros.hpp>
-#include "Receiver.hpp"
-#include "Server.hpp"
 
 TEST_CASE("Sender Start", "[start]") {
 
@@ -30,8 +28,7 @@ TEST_CASE("Sender Send Data", "[send]") {
     });
 
     std::thread receiver_thread([&] {
-        Receiver receiver("0.0.0.0", 8080);
-        std::string data = receiver.GetData(1024);
+        std::string data = std::string(receive_data_from("0.0.0.0", 8080, 1024));
         std::cout << "Data from sender -> " << data << std::endl;
         REQUIRE(data.empty() == false);
     });
@@ -49,8 +46,7 @@ TEST_CASE("Server", "[pool]") {
 
     for (size_t i=0; i<client_count; i++) {
         std::jthread receiver_thread([&] {
-            Receiver receiver("0.0.0.0", 8080);
-            std::string data = receiver.GetData(1024);
+            std::string data = std::string(receive_data_from("0.0.0.0", 8080, 1024));
             std::cout << "Data from sender -> " << data << std::endl;
             if (data.empty() == false) success_count.store(success_count.load()+1);
         });

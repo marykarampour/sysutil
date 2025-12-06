@@ -1,6 +1,6 @@
 //
 //  Server.cpp
-//  P2P
+//  
 //
 //  Created by Maryam Karampour on 2025-11-17.
 //
@@ -9,38 +9,36 @@
 #include <iostream>
 #include <format>
 #include <stop_token>
+#include <iterator>
+#include <chrono>
+#include "SenderReceiver.hpp"
 
 ServerThread::ServerThread() {
     m_paused = false;
-    m_busy = false;
 }
 
 ServerThread::ServerThread(const ServerThread& server) {
     //TODO: Start to re-run the thread? Terminate then restart?
     m_paused.store(server.m_paused.load());
-    m_busy.store(server.m_busy.load());
 }
 
 ServerThread::~ServerThread() {
 }
 
-void ServerThread::Start(Sender& sender) {
+void ServerThread::Start(Sender& sender, const std::unordered_set<ServiceInfo>& services) {
     m_thread = std::jthread([&](std::stop_token token) {
         while (!token.stop_requested()) {
-            if (m_paused || m_busy) return;
+            if (m_paused.load()) return;
 
-            m_busy = true;
-            int sock = sender.AcceptConnection();
-            std::stop_callback callback(token, [&](){
-                close(sock);
+            SenderReceiver request = SenderReceiver();
+            request.SetSender(sender);
+            
+            std::stop_callback callback(token, [&]() {
+                request.Stop();
             });
             
-            if (0 <= sock) {
-                std::string str = std::format("Hello {}", sock);
-                sender.SendData(sock, str);
-                close(sock);
-                m_busy = false;
-            }
+            std::pair<SYS_UTIL_REQUEST_STATUS, std::string> status = request.Response(services);
+            std::this_thread::sleep_for(std::chrono::seconds(request_accept_interval));
         }
         Stop();
     });
@@ -68,30 +66,38 @@ Server::~Server() {
     Stop();
 }
 
+void Server::SetServices(const std::unordered_set<ServiceInfo>& services) {
+    m_services = services;
+}
+
+const std::unordered_set<ServiceInfo>& Server::GetServices() {
+    return m_services;
+}
+
 void Server::Start(size_t pool_size) {
     m_thread_pool.clear();
     m_thread_pool.reserve(pool_size);
 
     for (size_t i=0; i<pool_size; i++) {
         m_thread_pool.emplace_back();
-        m_thread_pool.back().Start(m_sender);
+        m_thread_pool.back().Start(m_sender, GetServices());
     }
 }
 
 void Server::Restart() {
-    for (auto &t : m_thread_pool) {
+    for (auto t : m_thread_pool) {
         t.Restart();
     }
 }
 
 void Server::Pause() {
-    for (auto &t : m_thread_pool) {
+    for (auto t : m_thread_pool) {
         t.Pause();
     }
 }
 
 void Server::Stop() {
-    for (auto &t : m_thread_pool) {
+    for (auto t : m_thread_pool) {
         t.Stop();
     }
     m_sender.Stop();

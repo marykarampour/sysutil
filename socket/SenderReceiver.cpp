@@ -51,9 +51,12 @@ std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::Request(RequestO
 }
 
 std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::Request(RequestObject obj, int listener_socket) {
-    m_sender.SendData(listener_socket, obj.m_data);
     if (listener_socket < 0)
         return std::pair(SYS_UTIL_REQUEST_STATUS::SEND_FAILED, "client");
+    
+    std::string str = obj.Description();
+    m_sender.SendData(listener_socket, str);
+    
     std::string data;
     while (0 == data.length()) {
         data = std::string(receive_data(listener_socket, request_receive_buffer));
@@ -77,8 +80,7 @@ std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::Response(std::un
     }
     
     //TODO: parsing request
-    
-    //RequestObject obj = RequestObject(SYS_UTIL_REQUEST_TYPE::GET, "endpoint", data);
+    RequestObject obj = RequestObject(data);
 
     //TODO: handling response buffer
     

@@ -15,7 +15,7 @@ extern "C" {
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include "utility.h"
+#include "cutility.h"
 
 /** @brief STUN
  Binding Request and Binding Response.

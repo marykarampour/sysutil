@@ -25,7 +25,7 @@ ServerThread::ServerThread(const ServerThread& server) {
 ServerThread::~ServerThread() {
 }
 
-void ServerThread::Start(Sender& sender, const std::unordered_set<ServiceInfo>& services) {
+void ServerThread::Start(Sender& sender, const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator) {
     m_thread = std::jthread([&](std::stop_token token) {
         while (!token.stop_requested()) {
             if (m_paused.load()) return;
@@ -37,7 +37,7 @@ void ServerThread::Start(Sender& sender, const std::unordered_set<ServiceInfo>& 
                 request.Stop();
             });
             
-            std::pair<SYS_UTIL_REQUEST_STATUS, std::string> status = request.Response(services);
+            std::pair<SYS_UTIL_REQUEST_STATUS, std::string> status = request.AcceptRequests(services, creator);
             std::this_thread::sleep_for(std::chrono::seconds(request_accept_interval));
         }
         Stop();
@@ -56,7 +56,7 @@ void ServerThread::Restart() {
     m_paused = false;
 }
 
-Server::Server(int port, bool use_public_ip) {
+Server::Server(int port, bool use_public_ip, const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator) : m_services(services), m_response_creator(creator) {
     m_paused = false;
     m_sender = Sender(port);
     m_sender.Start(use_public_ip);
@@ -66,21 +66,13 @@ Server::~Server() {
     Stop();
 }
 
-void Server::SetServices(const std::unordered_set<ServiceInfo>& services) {
-    m_services = services;
-}
-
-const std::unordered_set<ServiceInfo>& Server::GetServices() {
-    return m_services;
-}
-
 void Server::Start(size_t pool_size) {
     m_thread_pool.clear();
     m_thread_pool.reserve(pool_size);
 
     for (size_t i=0; i<pool_size; i++) {
         m_thread_pool.emplace_back();
-        m_thread_pool.back().Start(m_sender, GetServices());
+        m_thread_pool.back().Start(m_sender, m_services, m_response_creator);
     }
 }
 

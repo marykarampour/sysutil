@@ -54,7 +54,7 @@ struct connect_addr_info * create_listener_info(uint16_t private_port, bool use_
     
     struct connect_addr_info *info = malloc(sizeof(struct connect_addr_info));
     info->socket = sock;
-    info->private_port = private_port;
+    info->private_port = stun_info->private_port;
     info->public_port = stun_info->public_port;
     info->private_ip = private_ip;
     info->public_ip = stun_info->public_ip;

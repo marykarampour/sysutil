@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include "Sender.hpp"
 #include "ServiceInfo.hpp"
+#include "RequestProcessor.hpp"
 
 class SenderReceiver {
     
@@ -48,13 +49,14 @@ public:
     
     /** @brief Makes a TCP/IP based request.
      @return Returns success or status if the request failed at any stage. */
-    std::pair<SYS_UTIL_REQUEST_STATUS, std::string> Request(RequestObject obj);
+    std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SendRequest(RequestObject obj);
     /** @brief Makes a TCP/IP based request.
      @return Returns success or status if the request failed at any stage. */
-    std::pair<SYS_UTIL_REQUEST_STATUS, std::string> Request(RequestObject obj, int listener_socket);
+    std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SendRequest(RequestObject obj, int listener_socket);
     /** @brief Respondes to a TCP/IP based request.
+     @param creator Subclass ResponseCreator and implement virtual methods that will be used for creating a responce.
      @return Returns success or status if the request failed at any stage. */
-    std::pair<SYS_UTIL_REQUEST_STATUS, std::string> Response(std::unordered_set<ServiceInfo> services);
+    std::pair<SYS_UTIL_REQUEST_STATUS, std::string> AcceptRequests(const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator);
 };
 
 #endif /* SenderReceiver_hpp */

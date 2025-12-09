@@ -16,6 +16,7 @@
 #include <functional>
 #include "Sender.hpp"
 #include "ServiceInfo.hpp"
+#include "RequestProcessor.hpp"
 
 class ServerThread {
     std::jthread m_thread;
@@ -29,7 +30,7 @@ public:
     ServerThread(const ServerThread& server);
     ~ServerThread();
     
-    void Start(Sender& sender, const std::unordered_set<ServiceInfo>& services);
+    void Start(Sender& sender, const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator);
     void Restart();
     void Pause();
     void Stop();
@@ -40,14 +41,13 @@ class Server {
     std::atomic<bool> m_paused = false;
     int m_port;
     Sender m_sender;
+    ResponseCreator& m_response_creator;
     std::unordered_set<ServiceInfo> m_services;
 
 public:
-    Server(int port, bool use_public_ip);
+    Server(int port, bool use_public_ip, const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator);
     ~Server();
     
-    void SetServices(const std::unordered_set<ServiceInfo>& services);
-    const std::unordered_set<ServiceInfo>& GetServices();
     void Start(size_t pool_size = std::thread::hardware_concurrency());
     void Restart();
     void Pause();

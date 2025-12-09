@@ -36,6 +36,7 @@ inline SYS_UTIL_REQUEST_TYPE operator++(SYS_UTIL_REQUEST_TYPE& t, int) {
 enum class SYS_UTIL_REQUEST_STATUS {
     UNKNOWN,
     SEND_FAILED,
+    PARSE_FAILED,
     ACCEPT_FAILED,
     SUCCESS
 };
@@ -70,7 +71,7 @@ public:
     }
 };
 
-//TODO: Add support for custom protocol - user implements parse and toString
+//TODO: Add support for custom protocol - user implements de/serialization
 class RequestObject : public ServiceBase {
     
     void Parse(const std::string& request);

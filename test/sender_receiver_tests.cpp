@@ -9,7 +9,7 @@
 
 TEST_CASE("Sender Start", "[start]") {
 
-    Sender sender(8080);
+    Sender sender(10101);
     int sock = sender.Start(false);
     REQUIRE(0 <= sock);
 }
@@ -17,7 +17,7 @@ TEST_CASE("Sender Start", "[start]") {
 TEST_CASE("Sender Send Data", "[send]") {
 
     std::thread sender_thread([&] {
-        Sender sender(8080);
+        Sender sender(10101);
         sender.Start(false);
         int sock = sender.AcceptConnection();
         if (0 <= sock) {
@@ -28,7 +28,7 @@ TEST_CASE("Sender Send Data", "[send]") {
     });
 
     std::thread receiver_thread([&] {
-        std::string data = std::string(receive_data_from("0.0.0.0", 8080, 1024));
+        std::string data = std::string(receive_data_from("0.0.0.0", 10101, 1024));
         std::cout << "Data from sender -> " << data << std::endl;
         REQUIRE(data.empty() == false);
     });
@@ -39,14 +39,14 @@ TEST_CASE("Sender Send Data", "[send]") {
 
 TEST_CASE("Server", "[pool]") {
 
-    Server server(8080, false);
+    Server server(10101, false);
     server.Start(4);
 	std::atomic<int> success_count = 0;
 	int client_count = 10;
 
     for (size_t i=0; i<client_count; i++) {
         std::jthread receiver_thread([&] {
-            std::string data = std::string(receive_data_from("0.0.0.0", 8080, 1024));
+            std::string data = std::string(receive_data_from("0.0.0.0", 10101, 1024));
             std::cout << "Data from sender -> " << data << std::endl;
             if (data.empty() == false) success_count.store(success_count.load()+1);
         });

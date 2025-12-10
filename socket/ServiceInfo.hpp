@@ -71,7 +71,6 @@ public:
     }
 };
 
-//TODO: Add support for custom protocol - user implements de/serialization
 class RequestObject : public ServiceBase {
     
     void Parse(const std::string& request);
@@ -89,7 +88,6 @@ public:
 };
 
 class ServiceInfo : public ServiceBase {
-    //TODO: params
     
 public:
     

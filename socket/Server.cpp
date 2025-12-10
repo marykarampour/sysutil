@@ -18,7 +18,6 @@ ServerThread::ServerThread() {
 }
 
 ServerThread::ServerThread(const ServerThread& server) {
-    //TODO: Start to re-run the thread? Terminate then restart?
     m_paused.store(server.m_paused.load());
 }
 

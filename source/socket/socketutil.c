@@ -16,7 +16,7 @@ struct connect_addr_info * create_listener_info(uint16_t private_port, bool use_
     
     struct connect_addr_info *stun_info = (struct connect_addr_info *)malloc(sizeof(struct connect_addr_info));
     if (use_public_ip) {
-        int result = get_public_addr_info("74.125.250.129", 19302, private_port, &stun_info);
+        int result = get_public_addr_info("74.125.250.129", 19302, private_port, &stun_info, true);
         if (result < 0) {
             fprintf(stderr, "Failed to get listener address\n");
         }
@@ -109,7 +109,7 @@ int get_listener_socket(const char *address, uint16_t port) {
     }
     
     if (conn_info == NULL) {
-        fprintf(stderr, "Failed to connect to listener at address %s with error -> %s\n", address, gai_strerror(errno));
+        fprintf(stderr, "Failed to connect to listener at address %s with error -> %s\n", address, strerror(errno));
         return -1;
     }
     

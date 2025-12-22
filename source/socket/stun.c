@@ -42,6 +42,28 @@ struct stun_xor_mapped_address {
     uint32_t address;// IPv4 - what about IPv6?
 };
 
+int init_addr(struct sockaddr_storage *addr, socklen_t *addr_len, int family, const char *ip, uint16_t port) {
+    memset(addr, 0, sizeof(*addr));
+    if (family == AF_INET6) {
+        struct sockaddr_in6 *addr_6 = (struct sockaddr_in6 *)addr;
+        *addr_len = sizeof(*addr_6);
+        addr_6->sin6_family = AF_INET6;
+        addr_6->sin6_port = htons(port);
+        if (inet_pton(AF_INET6, ip, &addr_6->sin6_addr) <= 0)
+            return -1;
+    }
+    else {
+        struct sockaddr_in *addr_4 = (struct sockaddr_in *)addr;
+        *addr_len = sizeof(*addr_4);
+        addr_4->sin_family = AF_INET;
+        addr_4->sin_port = htons(port);
+        if (inet_pton(AF_INET, ip, &addr_4->sin_addr) <= 0)
+            return -1;
+    }
+
+    return 0;
+}
+
 int parse_xor_mapped_address(const uint8_t *attr_ptr, uint16_t attr_len, bool useIPv6, struct stun_request_attributes *request, struct connect_addr_info *info, uint16_t client_port) {
     uint8_t family = attr_ptr[5];
     if ((attr_len >= 20 && family == STUN_IPV_6) || (attr_len >= 8 && family == STUN_IPV_4)) {
@@ -96,53 +118,35 @@ int parse_xor_mapped_address(const uint8_t *attr_ptr, uint16_t attr_len, bool us
 //STUN
 //https://gist.github.com/jyaif/e0db3a680443730c05ca36be26f22c93
 int get_public_addr_info(const char *stun_server_ip, uint16_t stun_server_port, uint16_t client_port, struct connect_addr_info **info, bool useIPv6) {
-    int sock = useIPv6 ? socket(AF_INET6, SOCK_DGRAM, 0) : socket(AF_INET, SOCK_DGRAM, 0);
+    int family = useIPv6 ? AF_INET6 : AF_INET;
+    int sock = socket(family, SOCK_DGRAM, 0);
     if (sock == -1) {
         perror("Failed to create STUN socket");
         fprintf(stderr, "STUN socket error -> %s\n", strerror(errno));
         return -1;
     }
 
+    struct sockaddr_storage server_addr;
+    struct sockaddr_storage client_addr;
+    struct sockaddr *server_sa = (struct sockaddr *)&server_addr;
+    struct sockaddr *client_sa = (struct sockaddr *)&client_addr;
+    socklen_t server_len;
     socklen_t client_len;
-    union {
-        struct sockaddr_in v4;
-        struct sockaddr_in6 v6;
-    } server_addr, client_addr;
+    const char *ip = useIPv6 ? "::" : "0.0.0.0";
 
-    if (useIPv6) {
-        client_len = sizeof(client_addr.v6);
-        memset(&server_addr.v6, 0, sizeof(server_addr.v6));
-        server_addr.v6.sin6_family = AF_INET6;
-        server_addr.v6.sin6_port = htons(stun_server_port);
-        int bin_addr = inet_pton(AF_INET6, stun_server_ip, &server_addr.v6.sin6_addr);
-        if (bin_addr <= 0) {
-            close(sock);
-            fprintf(stderr, "STUN invalid IP error -> %s\n", strerror(errno));
-            return -1;
-        }
-
-        memset(&client_addr.v6, 0, client_len);
-        client_addr.v6.sin6_family = AF_INET6;
-        client_addr.v6.sin6_port = htons(client_port);
-    }
-    else {
-        client_len = sizeof(client_addr.v4);
-        memset(&server_addr.v4, 0, sizeof(server_addr.v4));
-        server_addr.v4.sin_family = AF_INET;
-        server_addr.v4.sin_port = htons(stun_server_port);
-        int bin_addr = inet_pton(AF_INET, stun_server_ip, &server_addr.v4.sin_addr);
-        if (bin_addr <= 0) {
-            close(sock);
-            fprintf(stderr, "STUN invalid IP error -> %s\n", strerror(errno));
-            return -1;
-        }
-
-        memset(&client_addr.v4, 0, client_len);
-        client_addr.v4.sin_family = AF_INET;
-        client_addr.v4.sin_port = htons(client_port);
+    if (init_addr(&server_addr, &server_len, family, stun_server_ip, stun_server_port) < 0) {
+        close(sock);
+        fprintf(stderr, "Invalid STUN server IP\n");
+        return -1;
     }
 
-    if (bind(sock, (struct sockaddr *)&client_addr, client_len) < 0) {
+    if (init_addr(&client_addr, &client_len, family, ip, client_port) < 0) {
+        close(sock);
+        fprintf(stderr, "Invalid local bind IP\n");
+        return -1;
+    }
+
+    if (bind(sock, client_sa, client_len) < 0) {
         close(sock);
         fprintf(stderr, "STUN bind socket error -> %s\n", strerror(errno));
         return -1;
@@ -156,7 +160,7 @@ int get_public_addr_info(const char *stun_server_ip, uint16_t stun_server_port, 
     request.magic_cookie = htonl(STUN_BIND_REQUEST_COOKIE);
     randomize_int8_array(request.transaction_id, sizeof(request.transaction_id), 256);
 
-    ssize_t bytes_sent = sendto(sock, &request, sizeof(request), 0, (struct sockaddr *)&server_addr, useIPv6 ? sizeof(server_addr.v6) : sizeof(server_addr.v4));
+    ssize_t bytes_sent = sendto(sock, &request, sizeof(request), 0, server_sa, server_len);
     if (bytes_sent < 0) {
         perror("Failed to send STUN request");
         fprintf(stderr, "STUN request error -> %s\n", strerror(errno));

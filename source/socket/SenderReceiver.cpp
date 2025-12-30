@@ -47,7 +47,7 @@ void SenderReceiver::Stop() {
 }
 
 std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::SendRequest(RequestObject obj) {
-    int sock = get_listener_socket(m_listener_address.c_str(), m_listener_port);
+    int sock = get_listener_socket(m_listener_address.c_str(), m_listener_port, true);
     return SendRequest(obj, sock);
 }
 

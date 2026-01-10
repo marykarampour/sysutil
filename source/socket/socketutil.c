@@ -1,11 +1,11 @@
 //
-//  senderreceiver.c
+//  socketutil.c
 //  
 //
 //  Created by Maryam Karampour on 2025-11-09.
 //
 
-#include "senderreceiver.h"
+#include "socketutil.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -16,7 +16,7 @@ struct connect_addr_info * create_listener_info(uint16_t private_port, bool use_
     
     struct connect_addr_info *stun_info = (struct connect_addr_info *)malloc(sizeof(struct connect_addr_info));
     if (use_public_ip) {
-        int result = get_public_addr_info("74.125.250.129", 19302, private_port, &stun_info);
+        int result = get_public_addr_info("74.125.250.129", 19302, private_port, &stun_info, true);
         if (result < 0) {
             fprintf(stderr, "Failed to get listener address\n");
         }
@@ -54,7 +54,7 @@ struct connect_addr_info * create_listener_info(uint16_t private_port, bool use_
     
     struct connect_addr_info *info = malloc(sizeof(struct connect_addr_info));
     info->socket = sock;
-    info->private_port = private_port;
+    info->private_port = stun_info->private_port;
     info->public_port = stun_info->public_port;
     info->private_ip = private_ip;
     info->public_ip = stun_info->public_ip;
@@ -109,7 +109,7 @@ int get_listener_socket(const char *address, uint16_t port) {
     }
     
     if (conn_info == NULL) {
-        fprintf(stderr, "Failed to connect to listener at address %s with error -> %s\n", address, gai_strerror(errno));
+        fprintf(stderr, "Failed to connect to listener at address %s with error -> %s\n", address, strerror(errno));
         return -1;
     }
     
@@ -133,13 +133,13 @@ int create_client_socket(int listener_sock) {
 }
 
 const char * receive_data(int accept_sock, int buffer_size) {
+    if (accept_sock == -1 || buffer_size == 0) return "";
     
     char *buffer = (char *)malloc(buffer_size * sizeof(char));
     memset(buffer, 0, buffer_size);
 
     if (buffer == NULL) {
         perror("Failed to create buffer");
-        close(accept_sock);
         return "";
     }
     
@@ -151,12 +151,15 @@ const char * receive_data(int accept_sock, int buffer_size) {
         else
             perror("Failed to receive data");
         
-        close(accept_sock);
         return "";
     }
     
-    close(accept_sock);
     return buffer;
+}
+
+const char * receive_data_from(const char * listener_address, int listener_port, int buffer_size) {
+    int sock = get_listener_socket(listener_address, listener_port);
+    return receive_data(sock, buffer_size);
 }
 
 int create_poll(void) {

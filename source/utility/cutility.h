@@ -1,12 +1,12 @@
 //
-//  utility.h
+//  cutility.h
 //  
 //
 //  Created by Maryam Karampour on 2025-11-09.
 //
 
-#ifndef utility_h
-#define utility_h
+#ifndef cutility_h
+#define cutility_h
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,4 +40,4 @@ void split(uint16_t i, uint8_t **l, uint8_t **m);
 } // extern "C"
 #endif
 
-#endif /* utility_h */
+#endif /* cutility_h */

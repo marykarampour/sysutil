@@ -10,15 +10,14 @@
 
 #include <stdio.h>
 #include <string>
-#include <vector>
-#include "senderreceiver.h"
+#include "socketutil.h"
 
 class Sender {
     
     int m_listener_port;
     int m_socket = -1;
     std::string ip_address;
-    
+
 public:
     Sender();
     Sender(int listener_port)
@@ -28,7 +27,6 @@ public:
     int Start(bool use_public_ip);
     int AcceptConnection();
     ssize_t SendData(int client, std::string data);
-    void HandleRequest();
     void Stop();
 
     std::string Address();

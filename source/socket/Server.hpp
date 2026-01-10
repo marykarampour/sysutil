@@ -1,6 +1,6 @@
 //
 //  Server.hpp
-//  P2P
+//  
 //
 //  Created by Maryam Karampour on 2025-11-17.
 //
@@ -12,20 +12,25 @@
 #include <vector>
 #include <thread>
 #include <atomic>
+#include <unordered_set>
 #include <functional>
 #include "Sender.hpp"
+#include "ServiceInfo.hpp"
+#include "RequestProcessor.hpp"
 
 class ServerThread {
     std::jthread m_thread;
     std::atomic<bool> m_paused;
-    std::atomic<bool> m_busy;
 
 public:
+    
+    int request_accept_interval = 1;
+
     ServerThread();
     ServerThread(const ServerThread& server);
     ~ServerThread();
-
-    void Start(Sender& sender);
+    
+    void Start(Sender& sender, const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator);
     void Restart();
     void Pause();
     void Stop();
@@ -36,11 +41,13 @@ class Server {
     std::atomic<bool> m_paused = false;
     int m_port;
     Sender m_sender;
-    
-public:
-    Server(int port, bool use_public_ip);
-    ~Server();
+    ResponseCreator& m_response_creator;
+    std::unordered_set<ServiceInfo> m_services;
 
+public:
+    Server(int port, bool use_public_ip, const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator);
+    ~Server();
+    
     void Start(size_t pool_size = std::thread::hardware_concurrency());
     void Restart();
     void Pause();

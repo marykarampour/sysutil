@@ -6,6 +6,7 @@
 #include <iostream>
 #include <atomic>
 #include <catch2/catch_test_macros.hpp>
+#include <unistd.h>
 #include "Sender.hpp"
 #include "Server.hpp"
 #include "SenderReceiver.hpp"
@@ -105,11 +106,14 @@ TEST_CASE("Sender Send Data", "[send]") {
             std::string str("Hello Client!");
             std::cout << "Sending data to client -> " << str << std::endl;
             sender.SendData(sock, str);
+            close(sock);
         }
     });
 
     std::thread receiver_thread([&] {
-        std::string data = std::string(receive_data_from("0.0.0.0", 10101, 1024));
+        unsigned char *bytes = receive_data_from("::1", 10101, 1024, false);
+        std::string data = std::string(reinterpret_cast<char *>(bytes));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         std::cout << "Data from sender -> " << data << std::endl;
         REQUIRE(data.empty() == false);
     });
@@ -200,6 +204,6 @@ TEST_CASE("Server", "[pool]") {
     
     std::cout << "Server done!" << std::endl;
     server.Stop();
-	//This is not called. REQUIRE is not thread safe.
-	REQUIRE(client_count == success_count);
+    //This is not called. REQUIRE is not thread safe.
+    REQUIRE(client_count == success_count);
 }

@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <openssl/ssl.h>
 
 struct connect_addr_info * create_listener_info(uint16_t private_port, bool use_public_ip, bool use_ipv6) {
     
@@ -140,15 +141,27 @@ int create_client_socket(int listener_sock) {
     return sock;
 }
 
-const char * receive_data(int accept_sock, int buffer_size) {
-    if (accept_sock == -1 || buffer_size <= 0) return "";
+unsigned char * receive_data(int accept_sock, int buffer_size, bool use_ssl) {
+    if (accept_sock == -1 || buffer_size <= 0) return NULL;
 
-    char *buffer = (char *)malloc(buffer_size * sizeof(char));
+    uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
     memset(buffer, 0, buffer_size);
     size_t total = 0;
 
     while (1) {
-        ssize_t bytes = recv(accept_sock, buffer + total, buffer_size - total, 0);
+        uint8_t bytes = 0;
+       
+        if (use_ssl) {
+            SSL_CTX *ctx = SSL_CTX_new(TLS_method());
+            SSL *ssl = SSL_new(ctx);
+            SSL_set_fd(ssl, accept_sock);
+            SSL_connect(ssl);
+            SSL_read(ssl, buffer, 1023);
+        }
+        else {
+            bytes = recv(accept_sock, buffer + total, buffer_size - total, 0);
+        }
+        
         if (bytes < 0) {
             perror("Failed to receive data");
             break;
@@ -198,9 +211,9 @@ recv_bytes_t receive_bytes(int accept_sock, size_t buffer_size) {
     return result;
 }
 
-const char * receive_data_from(const char * listener_address, int listener_port, int buffer_size) {
+unsigned char * receive_data_from(const char * listener_address, int listener_port, int buffer_size, bool use_ssl) {
     int sock = get_listener_socket(listener_address, listener_port, true);
-    return receive_data(sock, buffer_size);
+    return receive_data(sock, buffer_size, use_ssl);
 }
 
 recv_bytes_t receive_bytes_from(const char *listener_address, int listener_port, size_t buffer_size) {
@@ -220,40 +233,6 @@ ssize_t send_data(int dest, const char *data, size_t size) {
         fprintf(stderr, "Failed to send data -> %s\n", strerror(errno));
     return se;
 }
-
-//TODO: OpenSSL
-const char * make_http_request(const char *type, const char *host, uint16_t port) {
-    
-    char response[8192];
-    const char *format = "%s / HTTP/1.1\r\nHost: %s\r\n";
-    size_t len = strlen(format) + strlen(type) + strlen(host);
-    char msg[len];
-    
-    sprintf(msg, format, type, host);
-    
-    int sock = get_listener_socket(host, port, true);
-    if (sock == -1 ) {
-        fprintf(stderr, "http request:\n%s\n failed with error -> %s\n", msg, strerror(errno));
-        return NULL;
-    }
-    
-    memset(response, 0, sizeof(response));
-    send(sock, msg, sizeof(msg), 0);
-    int response_size = sizeof(response);
-    ssize_t s = 0;
-    
-    while (0 < (s = recv(sock, response+s, response_size, 0))) {
-        response_size -= s;
-    }
-    
-    char *str = malloc(response_size+1);
-    strcpy(str, response);
-    printf("http response ->\n%s", str);
-    close(sock);
-    
-    return str;
-}
-
 
 #pragma mark -
 

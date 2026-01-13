@@ -60,7 +60,8 @@ std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::SendRequest(Requ
     
     std::string data;
     while (0 == data.length()) {
-        data = std::string(receive_data(listener_socket, request_receive_buffer));
+        unsigned char *bytes = receive_data(listener_socket, request_receive_buffer, using_ssl);
+         data = std::string(reinterpret_cast<char *>(bytes));
         std::this_thread::sleep_for(std::chrono::seconds(request_receive_interval));
     }
     
@@ -76,7 +77,8 @@ std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::AcceptRequests(c
         return std::pair(SYS_UTIL_REQUEST_STATUS::ACCEPT_FAILED, "server");
     std::string data;
     while (0 == data.length()) {
-        data = std::string(receive_data(accept_sock, response_receive_buffer));
+        unsigned char *bytes = receive_data(accept_sock, response_receive_buffer, using_ssl);
+        data = std::string(reinterpret_cast<char *>(bytes));
         std::this_thread::sleep_for(std::chrono::seconds(response_receive_interval));
     }
     

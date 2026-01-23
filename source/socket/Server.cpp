@@ -76,22 +76,22 @@ void Server::Start(size_t pool_size) {
 }
 
 void Server::Restart() {
-    for (auto t : m_thread_pool) {
+    for (auto& t : m_thread_pool) {
         t.Restart();
     }
 }
 
 void Server::Pause() {
-    for (auto t : m_thread_pool) {
+    for (auto& t : m_thread_pool) {
         t.Pause();
     }
 }
 
 void Server::Stop() {
-    for (auto t : m_thread_pool) {
+    m_sender.Stop();
+    for (auto& t : m_thread_pool) {
         t.Stop();
     }
-    m_sender.Stop();
     m_thread_pool.clear();
 }
 

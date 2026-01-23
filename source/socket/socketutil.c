@@ -162,7 +162,6 @@ const char * receive_data(int accept_sock, int buffer_size) {
     }
 
     buffer[total] = '\0';
-    close(accept_sock);
     return buffer;
 }
 
@@ -194,20 +193,23 @@ recv_bytes_t receive_bytes(int accept_sock, size_t buffer_size) {
 
     result.bytes = buffer;
     result.length = total;
-    close(accept_sock);
     return result;
 }
 
 const char * receive_data_from(const char * listener_address, int listener_port, int buffer_size) {
     int sock = get_listener_socket(listener_address, listener_port, true);
-    return receive_data(sock, buffer_size);
+    const char *data = receive_data(sock, buffer_size);
+    close(sock);
+    return data;
 }
 
 recv_bytes_t receive_bytes_from(const char *listener_address, int listener_port, size_t buffer_size) {
     recv_bytes_t empty = {0};
     int sock = get_listener_socket(listener_address, listener_port, true);
     if (sock < 0) return empty;
-    return receive_bytes(sock, buffer_size);
+    recv_bytes_t result = receive_bytes(sock, buffer_size);
+    close(sock);
+    return result;
 }
 
 int create_poll(void) {

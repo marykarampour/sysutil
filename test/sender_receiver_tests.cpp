@@ -133,7 +133,7 @@ TEST_CASE("Sender Receiver", "[Send]") {
     const ServiceInfo info = ServiceInfo(SYS_UTIL_REQUEST_TYPE::POST, "api/v1/post");
     std::unordered_set<ServiceInfo> services = {info};
     std::unordered_map<std::string, std::string> headers = {
-        {"Host","0.0.0.0"},
+        {"Host","::1"},
         {"Content-Type","application/json"},
         {"Content-Length",std::to_string(content.length())}
     };
@@ -150,7 +150,7 @@ TEST_CASE("Sender Receiver", "[Send]") {
     
     std::jthread receiver_thread([&] {
         
-        SenderReceiver client("0.0.0.0", port.load());
+        SenderReceiver client("::1", port.load());
         RequestObject obj = RequestObject(info.m_request_type, info.m_endpoint, headers, MapToJSONString(body));
         std::pair<SYS_UTIL_REQUEST_STATUS, std::string> res = client.SendRequest(obj);
         
@@ -190,7 +190,7 @@ TEST_CASE("Server", "[pool]") {
     //TODO: need to create a Client that can send request data
     for (size_t i=0; i<client_count; i++) {
         
-        SenderReceiver client("0.0.0.0", port.load());
+        SenderReceiver client("::1", port.load());
         int index = i%2;
         const ServiceInfo info = vect[index];
         RequestObject obj = RequestObject(info.m_request_type, info.m_endpoint, headers, content);

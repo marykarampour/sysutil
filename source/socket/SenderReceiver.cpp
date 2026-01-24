@@ -7,6 +7,7 @@
 
 #include "SenderReceiver.hpp"
 #include <unistd.h>
+#include <sys/socket.h>
 #include <thread>
 #include <chrono>
 
@@ -57,12 +58,15 @@ std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::SendRequest(Requ
     
     std::string str = obj.Description();
     m_sender.SendData(listener_socket, str);
-    
+    shutdown(listener_socket, SHUT_WR);
+
     std::string data;
     while (0 == data.length()) {
         unsigned char *bytes = receive_data(listener_socket, request_receive_buffer, using_ssl);
-         data = std::string(reinterpret_cast<char *>(bytes));
-        std::this_thread::sleep_for(std::chrono::seconds(request_receive_interval));
+        data = std::string(reinterpret_cast<char *>(bytes));
+        
+        if (0 == data.length())
+            std::this_thread::sleep_for(std::chrono::seconds(request_receive_interval));
     }
     
     close(listener_socket);
@@ -79,7 +83,9 @@ std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::AcceptRequests(c
     while (0 == data.length()) {
         unsigned char *bytes = receive_data(accept_sock, response_receive_buffer, using_ssl);
         data = std::string(reinterpret_cast<char *>(bytes));
-        std::this_thread::sleep_for(std::chrono::seconds(response_receive_interval));
+
+        if (0 == data.length())
+            std::this_thread::sleep_for(std::chrono::seconds(response_receive_interval));
     }
     
     RequestObject obj = RequestObject(data);
@@ -100,7 +106,8 @@ std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::AcceptRequests(c
     ssize_t size = 0;
     while (size == 0) {
         size = m_sender.SendData(accept_sock, response);
-        std::this_thread::sleep_for(std::chrono::seconds(response_send_interval));
+        if (size == 0)
+            std::this_thread::sleep_for(std::chrono::seconds(response_send_interval));
     }
     
     close(accept_sock);

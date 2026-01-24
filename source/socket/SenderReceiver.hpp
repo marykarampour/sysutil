@@ -32,6 +32,8 @@ public:
     int request_receive_buffer = 1024;
     int response_receive_buffer = 1024;
     
+    bool using_ssl = true;
+    
     /** @brief Does not creates the Sender. */
     SenderReceiver();
     /** @brief Creates the Sender. */

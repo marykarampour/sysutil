@@ -111,8 +111,9 @@ TEST_CASE("Sender Send Data", "[send]") {
     });
 
     std::thread receiver_thread([&] {
+        unsigned char *bytes = receive_data_from("::1", 10101, 1024, false);
+        std::string data = std::string(reinterpret_cast<char *>(bytes));
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        std::string data = std::string(receive_data_from("::1", 10101, 1024));
         std::cout << "Data from sender -> " << data << std::endl;
         REQUIRE(data.empty() == false);
     });

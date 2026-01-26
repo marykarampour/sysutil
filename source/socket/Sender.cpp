@@ -51,5 +51,5 @@ int Sender::Port() {
 }
 
 ssize_t Sender::SendData(int client, std::string data) {
-    return send_data(client, data.c_str(), data.length());
+    return send_data(client, data.c_str(), data.length(), using_ssl);
 }

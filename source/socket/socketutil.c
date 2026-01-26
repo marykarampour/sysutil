@@ -229,8 +229,21 @@ int create_poll(void) {
     return 0;
 }
 
-ssize_t send_data(int dest, const char *data, size_t size) {
-    ssize_t se = send(dest, data, size, 0);
+ssize_t send_data(int dest, const char *data, size_t size, bool use_ssl) {
+    
+    ssize_t se = 0;
+    
+    if (use_ssl) {
+        SSL_CTX *ctx = SSL_CTX_new(TLS_method());
+        SSL *ssl = SSL_new(ctx);
+        SSL_set_fd(ssl, dest);
+        SSL_connect(ssl);
+        se = SSL_write(ssl, data, (int)size);
+    }
+    else {
+        se = send(dest, data, size, 0);
+    }
+
     if (se == -1)
         fprintf(stderr, "Failed to send data -> %s\n", strerror(errno));
     return se;

@@ -19,6 +19,9 @@ class Sender {
     std::string ip_address;
 
 public:
+    
+    bool using_ssl = true;
+
     Sender();
     Sender(int listener_port)
     : m_listener_port(listener_port)

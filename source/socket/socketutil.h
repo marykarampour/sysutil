@@ -29,7 +29,7 @@ unsigned char * receive_data(int accept_sock, int buffer_size, bool use_ssl);
 /** @brief Does not close the accept_sock. Caller is responsible for closing the socket. */
 unsigned char * receive_data_from(const char * listener_address, int listener_port, int buffer_size, bool use_ssl);
 int create_poll(void);
-ssize_t send_data(int dest, const char *data, size_t size);
+ssize_t send_data(int dest, const char *data, size_t size, bool use_ssl);
 
 recv_bytes_t receive_bytes(int sock, size_t buffer_size);
 recv_bytes_t receive_bytes_from(const char *listener_address, int listener_port, size_t buffer_size);

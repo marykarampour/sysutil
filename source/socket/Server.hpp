@@ -52,6 +52,8 @@ public:
     void Restart();
     void Pause();
     void Stop();
+    /** @brief Sets SSL mode on the underlying Sender. */
+    void SetSSL(bool use_ssl);
 };
 
 #endif /* Server_hpp */

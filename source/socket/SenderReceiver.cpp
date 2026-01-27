@@ -22,7 +22,7 @@ SenderReceiver::SenderReceiver(int listener_port) {
 SenderReceiver::SenderReceiver(std::string listener_address, int listener_port) {
     m_listener_address = listener_address;
     m_listener_port = listener_port;
-    StartSender(listener_port, true);
+    // TODO: Add clearer briefs --  Client mode: don't start a sender/listener, just store address for SendRequest()
 }
 
 SenderReceiver::~SenderReceiver() {
@@ -45,6 +45,10 @@ int SenderReceiver::Start(bool use_public_ip) {
 
 void SenderReceiver::Stop() {
    m_sender.Stop();
+}
+
+void SenderReceiver::SetSSL(bool use_ssl) {
+    m_sender.using_ssl = use_ssl;
 }
 
 std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::SendRequest(RequestObject obj) {

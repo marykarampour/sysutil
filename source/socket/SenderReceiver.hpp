@@ -46,6 +46,8 @@ public:
     int Start(bool use_public_ip);
     /** @brief Stops the Sender. */
     void Stop();
+    /** @brief Sets SSL mode on the underlying Sender. */
+    void SetSSL(bool use_ssl);
     
     /** @brief Makes a TCP/IP based request.
      @return Returns success or status if the request failed at any stage. */

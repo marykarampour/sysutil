@@ -95,3 +95,7 @@ void Server::Stop() {
     m_thread_pool.clear();
 }
 
+void Server::SetSSL(bool use_ssl) {
+    m_sender.using_ssl = use_ssl;
+}
+

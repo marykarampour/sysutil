@@ -33,11 +33,11 @@ public:
     int response_receive_buffer = 1024;
         
     /** @brief Does not creates the Sender. */
-    SenderReceiver();
+    SenderReceiver(bool use_ssl = false);
     /** @brief Creates the Sender. */
-    SenderReceiver(int listener_port);
+    SenderReceiver(int listener_port, bool use_ssl = false);
     /** @brief Creates the Sender. */
-    SenderReceiver(std::string listener_address, int listener_port);
+    SenderReceiver(std::string listener_address, int listener_port, bool use_ssl = false);
     ~SenderReceiver();
     
     /** @brief Called is responsible for starting the Sender. */
@@ -46,8 +46,6 @@ public:
     int Start(bool use_public_ip);
     /** @brief Stops the Sender. */
     void Stop();
-    /** @brief Sets SSL mode on the underlying Sender. */
-    void SetSSL(bool use_ssl);
     
     /** @brief Makes a TCP/IP based request.
      @return Returns success or status if the request failed at any stage. */

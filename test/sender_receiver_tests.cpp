@@ -140,8 +140,7 @@ TEST_CASE("Sender Receiver", "[Send]") {
     };
     
     std::jthread sender_thread([&] {
-        SenderReceiver sender(port.load());
-        sender.SetSSL(false);
+        SenderReceiver sender(port.load(), false);
         ResponseCreator_Test creator = ResponseCreator_Test();
 
         std::pair<SYS_UTIL_REQUEST_STATUS, std::string> res = sender.AcceptRequests(services, creator);
@@ -152,8 +151,7 @@ TEST_CASE("Sender Receiver", "[Send]") {
     
     std::jthread receiver_thread([&] {
 
-        SenderReceiver client("::1", port.load());
-        client.SetSSL(false);
+        SenderReceiver client("::1", port.load(), false);
         RequestObject obj = RequestObject(info.m_request_type, info.m_endpoint, headers, MapToJSONString(body));
         std::pair<SYS_UTIL_REQUEST_STATUS, std::string> res = client.SendRequest(obj);
 
@@ -187,15 +185,13 @@ TEST_CASE("Server", "[pool]") {
     int client_count = 10;
     
     ResponseCreator_Test creator = ResponseCreator_Test();
-    Server server(port.load(), false, services, creator);
-    server.SetSSL(false);
+    Server server(port.load(), false, services, creator, false);
     server.Start(4);
 
     //TODO: need to create a Client that can send request data
     for (size_t i=0; i<client_count; i++) {
 
-        SenderReceiver client("::1", port.load());
-        client.SetSSL(false);
+        SenderReceiver client("::1", port.load(), false);
         int index = i%2;
         const ServiceInfo info = vect[index];
         RequestObject obj = RequestObject(info.m_request_type, info.m_endpoint, headers, content);

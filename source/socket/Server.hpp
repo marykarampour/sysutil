@@ -45,15 +45,13 @@ class Server {
     std::unordered_set<ServiceInfo> m_services;
 
 public:
-    Server(int port, bool use_public_ip, const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator);
+    Server(int port, bool use_public_ip, const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator, bool use_ssl = false);
     ~Server();
-    
+
     void Start(size_t pool_size = std::thread::hardware_concurrency());
     void Restart();
     void Pause();
     void Stop();
-    /** @brief Sets SSL mode on the underlying Sender. */
-    void SetSSL(bool use_ssl);
 };
 
 #endif /* Server_hpp */

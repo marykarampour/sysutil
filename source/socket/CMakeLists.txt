@@ -11,7 +11,6 @@ set(
         ../utility/CPPUtility.cpp
 )
 
-set(OPENSSL_ROOT_DIR /opt/homebrew/opt/openssl@3)
 find_package(OpenSSL REQUIRED)
 
 add_library(socket ${SOCK_SOURCE})

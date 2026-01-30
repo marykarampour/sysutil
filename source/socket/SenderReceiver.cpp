@@ -11,18 +11,21 @@
 #include <thread>
 #include <chrono>
 
-SenderReceiver::SenderReceiver() {
+SenderReceiver::SenderReceiver(bool use_ssl) {
+    m_sender.using_ssl = use_ssl;
 }
 
-SenderReceiver::SenderReceiver(int listener_port) {
+SenderReceiver::SenderReceiver(int listener_port, bool use_ssl) {
     m_listener_port = listener_port;
     StartSender(listener_port, false);
+    m_sender.using_ssl = use_ssl;
 }
 
-SenderReceiver::SenderReceiver(std::string listener_address, int listener_port) {
+SenderReceiver::SenderReceiver(std::string listener_address, int listener_port, bool use_ssl) {
     m_listener_address = listener_address;
     m_listener_port = listener_port;
-    StartSender(listener_port, true);
+    m_sender.using_ssl = use_ssl;
+    // TODO: Add clearer briefs --  Client mode: don't start a sender/listener, just store address for SendRequest()
 }
 
 SenderReceiver::~SenderReceiver() {

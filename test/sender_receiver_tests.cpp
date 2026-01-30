@@ -100,6 +100,7 @@ TEST_CASE("Sender Send Data", "[send]") {
 
     std::thread sender_thread([&] {
         Sender sender(10101);
+        sender.using_ssl = false;
         sender.Start(false);
         int sock = sender.AcceptConnection();
         if (0 <= sock) {
@@ -139,9 +140,9 @@ TEST_CASE("Sender Receiver", "[Send]") {
     };
     
     std::jthread sender_thread([&] {
-        SenderReceiver sender(port.load());
+        SenderReceiver sender(port.load(), false);
         ResponseCreator_Test creator = ResponseCreator_Test();
-        
+
         std::pair<SYS_UTIL_REQUEST_STATUS, std::string> res = sender.AcceptRequests(services, creator);
         if (res.first == SYS_UTIL_REQUEST_STATUS::SUCCESS) {
             std::cout << "Data sent to client -> " << res.second << std::endl;
@@ -149,11 +150,11 @@ TEST_CASE("Sender Receiver", "[Send]") {
     });
     
     std::jthread receiver_thread([&] {
-        
-        SenderReceiver client("::1", port.load());
+
+        SenderReceiver client("::1", port.load(), false);
         RequestObject obj = RequestObject(info.m_request_type, info.m_endpoint, headers, MapToJSONString(body));
         std::pair<SYS_UTIL_REQUEST_STATUS, std::string> res = client.SendRequest(obj);
-        
+
         if (res.first == SYS_UTIL_REQUEST_STATUS::SUCCESS) {
             std::cout << http_request_type_map.at(info.m_request_type) << " data from sender -> " << res.second << std::endl;
             REQUIRE(res.second.empty() == false);
@@ -184,13 +185,13 @@ TEST_CASE("Server", "[pool]") {
     int client_count = 10;
     
     ResponseCreator_Test creator = ResponseCreator_Test();
-    Server server(port.load(), false, services, creator);
+    Server server(port.load(), false, services, creator, false);
     server.Start(4);
-    
+
     //TODO: need to create a Client that can send request data
     for (size_t i=0; i<client_count; i++) {
-        
-        SenderReceiver client("::1", port.load());
+
+        SenderReceiver client("::1", port.load(), false);
         int index = i%2;
         const ServiceInfo info = vect[index];
         RequestObject obj = RequestObject(info.m_request_type, info.m_endpoint, headers, content);

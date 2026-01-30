@@ -36,8 +36,12 @@ struct connect_addr_info * create_listener_info(uint16_t private_port, bool use_
     for (bind_info = private_addr; bind_info != NULL; bind_info = bind_info->ai_next) {
         sock = socket(bind_info->ai_family, bind_info->ai_socktype, bind_info->ai_protocol);
         if (sock < 0) continue;
-        
+
         setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+//TODO: Add Linux support for disabling SIGPIPE
+#ifdef SO_NOSIGPIPE
+        setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(int));
+#endif
         int bd = bind(sock, bind_info->ai_addr, bind_info->ai_addrlen);
         if (bd < 0) {
             close(sock);
@@ -107,7 +111,12 @@ int get_listener_socket(const char *address, uint16_t port, bool use_ipv6) {
     for (conn_info = addr_info; conn_info != NULL; conn_info = conn_info->ai_next) {
         sock = socket(conn_info->ai_family, conn_info->ai_socktype, conn_info->ai_protocol);
         if (sock < 0) continue;
-        
+
+//TODO: Add Linux support for disabling SIGPIPE
+#ifdef SO_NOSIGPIPE
+        int yes = 1;
+        setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(int));
+#endif
         int conn = connect(sock, conn_info->ai_addr, conn_info->ai_addrlen);
         if (conn < 0) {
             close(sock);
@@ -127,17 +136,22 @@ int get_listener_socket(const char *address, uint16_t port, bool use_ipv6) {
 }
 
 int create_client_socket(int listener_sock) {
-    
+
     struct sockaddr_storage addr_info;
     socklen_t addr_len = sizeof(addr_info);
-    
+
     int sock = accept(listener_sock, (struct sockaddr *)&addr_info, &addr_len);
-    
+
     if (sock == -1) {
         perror("Failed to create accept socket");
         return -1;
     }
-    
+
+//TODO: Add Linux support for disabling SIGPIPE
+#ifdef SO_NOSIGPIPE
+    int yes = 1;
+    setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(int));
+#endif
     return sock;
 }
 

@@ -19,7 +19,7 @@ class Sender {
     std::string ip_address;
 
 public:
-    
+
     bool using_ssl = true;
 
     Sender();

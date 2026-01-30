@@ -38,6 +38,7 @@ struct connect_addr_info * create_listener_info(uint16_t private_port, bool use_
         if (sock < 0) continue;
 
         setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+//TODO: Add Linux support for disabling SIGPIPE
 #ifdef SO_NOSIGPIPE
         setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(int));
 #endif
@@ -111,6 +112,7 @@ int get_listener_socket(const char *address, uint16_t port, bool use_ipv6) {
         sock = socket(conn_info->ai_family, conn_info->ai_socktype, conn_info->ai_protocol);
         if (sock < 0) continue;
 
+//TODO: Add Linux support for disabling SIGPIPE
 #ifdef SO_NOSIGPIPE
         int yes = 1;
         setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(int));
@@ -145,6 +147,7 @@ int create_client_socket(int listener_sock) {
         return -1;
     }
 
+//TODO: Add Linux support for disabling SIGPIPE
 #ifdef SO_NOSIGPIPE
     int yes = 1;
     setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(int));

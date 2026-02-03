@@ -18,7 +18,7 @@ Sender::Sender() {
 
 int Sender::Start(bool use_public_ip) {
     
-    connect_addr_info *listener = create_listener_info(m_listener_port, use_public_ip);
+    connect_addr_info *listener = create_listener_info(m_listener_port, use_public_ip, true);
     
     if (listener == NULL || listener->socket == -1) {
         return -1;
@@ -51,5 +51,5 @@ int Sender::Port() {
 }
 
 ssize_t Sender::SendData(int client, std::string data) {
-    return send_data(client, data.c_str(), data.length());
+    return send_data(client, data.c_str(), data.length(), using_ssl);
 }

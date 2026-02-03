@@ -6,6 +6,7 @@
 #include <iostream>
 #include <atomic>
 #include <catch2/catch_test_macros.hpp>
+#include <unistd.h>
 #include "Sender.hpp"
 #include "Server.hpp"
 #include "SenderReceiver.hpp"
@@ -99,17 +100,21 @@ TEST_CASE("Sender Send Data", "[send]") {
 
     std::thread sender_thread([&] {
         Sender sender(10101);
+        sender.using_ssl = false;
         sender.Start(false);
         int sock = sender.AcceptConnection();
         if (0 <= sock) {
             std::string str("Hello Client!");
             std::cout << "Sending data to client -> " << str << std::endl;
             sender.SendData(sock, str);
+            close(sock);
         }
     });
 
     std::thread receiver_thread([&] {
-        std::string data = std::string(receive_data_from("0.0.0.0", 10101, 1024));
+        unsigned char *bytes = receive_data_from("::1", 10101, 1024, false);
+        std::string data = std::string(reinterpret_cast<char *>(bytes));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         std::cout << "Data from sender -> " << data << std::endl;
         REQUIRE(data.empty() == false);
     });
@@ -129,15 +134,15 @@ TEST_CASE("Sender Receiver", "[Send]") {
     const ServiceInfo info = ServiceInfo(SYS_UTIL_REQUEST_TYPE::POST, "api/v1/post");
     std::unordered_set<ServiceInfo> services = {info};
     std::unordered_map<std::string, std::string> headers = {
-        {"Host","0.0.0.0"},
+        {"Host","::1"},
         {"Content-Type","application/json"},
         {"Content-Length",std::to_string(content.length())}
     };
     
     std::jthread sender_thread([&] {
-        SenderReceiver sender(port.load());
+        SenderReceiver sender(port.load(), false);
         ResponseCreator_Test creator = ResponseCreator_Test();
-        
+
         std::pair<SYS_UTIL_REQUEST_STATUS, std::string> res = sender.AcceptRequests(services, creator);
         if (res.first == SYS_UTIL_REQUEST_STATUS::SUCCESS) {
             std::cout << "Data sent to client -> " << res.second << std::endl;
@@ -145,11 +150,11 @@ TEST_CASE("Sender Receiver", "[Send]") {
     });
     
     std::jthread receiver_thread([&] {
-        
-        SenderReceiver client("0.0.0.0", port.load());
+
+        SenderReceiver client("::1", port.load(), false);
         RequestObject obj = RequestObject(info.m_request_type, info.m_endpoint, headers, MapToJSONString(body));
         std::pair<SYS_UTIL_REQUEST_STATUS, std::string> res = client.SendRequest(obj);
-        
+
         if (res.first == SYS_UTIL_REQUEST_STATUS::SUCCESS) {
             std::cout << http_request_type_map.at(info.m_request_type) << " data from sender -> " << res.second << std::endl;
             REQUIRE(res.second.empty() == false);
@@ -180,13 +185,13 @@ TEST_CASE("Server", "[pool]") {
     int client_count = 10;
     
     ResponseCreator_Test creator = ResponseCreator_Test();
-    Server server(port.load(), false, services, creator);
+    Server server(port.load(), false, services, creator, false);
     server.Start(4);
-    
+
     //TODO: need to create a Client that can send request data
     for (size_t i=0; i<client_count; i++) {
-        
-        SenderReceiver client("0.0.0.0", port.load());
+
+        SenderReceiver client("::1", port.load(), false);
         int index = i%2;
         const ServiceInfo info = vect[index];
         RequestObject obj = RequestObject(info.m_request_type, info.m_endpoint, headers, content);
@@ -200,6 +205,6 @@ TEST_CASE("Server", "[pool]") {
     
     std::cout << "Server done!" << std::endl;
     server.Stop();
-	//This is not called. REQUIRE is not thread safe.
-	REQUIRE(client_count == success_count);
+    //This is not called. REQUIRE is not thread safe.
+    REQUIRE(client_count == success_count);
 }

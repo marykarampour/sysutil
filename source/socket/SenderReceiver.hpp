@@ -31,13 +31,13 @@ public:
     
     int request_receive_buffer = 1024;
     int response_receive_buffer = 1024;
-    
+        
     /** @brief Does not creates the Sender. */
-    SenderReceiver();
+    SenderReceiver(bool use_ssl = false);
     /** @brief Creates the Sender. */
-    SenderReceiver(int listener_port);
+    SenderReceiver(int listener_port, bool use_ssl = false);
     /** @brief Creates the Sender. */
-    SenderReceiver(std::string listener_address, int listener_port);
+    SenderReceiver(std::string listener_address, int listener_port, bool use_ssl = false);
     ~SenderReceiver();
     
     /** @brief Called is responsible for starting the Sender. */

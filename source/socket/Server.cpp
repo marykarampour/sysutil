@@ -55,9 +55,10 @@ void ServerThread::Restart() {
     m_paused = false;
 }
 
-Server::Server(int port, bool use_public_ip, const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator) : m_services(services), m_response_creator(creator) {
+Server::Server(int port, bool use_public_ip, const std::unordered_set<ServiceInfo>& services, ResponseCreator& creator, bool use_ssl) : m_services(services), m_response_creator(creator) {
     m_paused = false;
     m_sender = Sender(port);
+    m_sender.using_ssl = use_ssl;
     m_sender.Start(use_public_ip);
 }
 
@@ -76,22 +77,22 @@ void Server::Start(size_t pool_size) {
 }
 
 void Server::Restart() {
-    for (auto t : m_thread_pool) {
+    for (auto& t : m_thread_pool) {
         t.Restart();
     }
 }
 
 void Server::Pause() {
-    for (auto t : m_thread_pool) {
+    for (auto& t : m_thread_pool) {
         t.Pause();
     }
 }
 
 void Server::Stop() {
-    for (auto t : m_thread_pool) {
+    m_sender.Stop();
+    for (auto& t : m_thread_pool) {
         t.Stop();
     }
-    m_sender.Stop();
     m_thread_pool.clear();
 }
 

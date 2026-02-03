@@ -7,21 +7,25 @@
 
 #include "SenderReceiver.hpp"
 #include <unistd.h>
+#include <sys/socket.h>
 #include <thread>
 #include <chrono>
 
-SenderReceiver::SenderReceiver() {
+SenderReceiver::SenderReceiver(bool use_ssl) {
+    m_sender.using_ssl = use_ssl;
 }
 
-SenderReceiver::SenderReceiver(int listener_port) {
+SenderReceiver::SenderReceiver(int listener_port, bool use_ssl) {
     m_listener_port = listener_port;
     StartSender(listener_port, false);
+    m_sender.using_ssl = use_ssl;
 }
 
-SenderReceiver::SenderReceiver(std::string listener_address, int listener_port) {
+SenderReceiver::SenderReceiver(std::string listener_address, int listener_port, bool use_ssl) {
     m_listener_address = listener_address;
     m_listener_port = listener_port;
-    StartSender(listener_port, true);
+    m_sender.using_ssl = use_ssl;
+    // TODO: Add clearer briefs --  Client mode: don't start a sender/listener, just store address for SendRequest()
 }
 
 SenderReceiver::~SenderReceiver() {
@@ -47,7 +51,7 @@ void SenderReceiver::Stop() {
 }
 
 std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::SendRequest(RequestObject obj) {
-    int sock = get_listener_socket(m_listener_address.c_str(), m_listener_port);
+    int sock = get_listener_socket(m_listener_address.c_str(), m_listener_port, true);
     return SendRequest(obj, sock);
 }
 
@@ -57,11 +61,15 @@ std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::SendRequest(Requ
     
     std::string str = obj.Description();
     m_sender.SendData(listener_socket, str);
-    
+    shutdown(listener_socket, SHUT_WR);
+
     std::string data;
     while (0 == data.length()) {
-        data = std::string(receive_data(listener_socket, request_receive_buffer));
-        std::this_thread::sleep_for(std::chrono::seconds(request_receive_interval));
+        unsigned char *bytes = receive_data(listener_socket, request_receive_buffer, m_sender.using_ssl);
+        data = std::string(reinterpret_cast<char *>(bytes));
+        
+        if (0 == data.length())
+            std::this_thread::sleep_for(std::chrono::seconds(request_receive_interval));
     }
     
     close(listener_socket);
@@ -76,8 +84,11 @@ std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::AcceptRequests(c
         return std::pair(SYS_UTIL_REQUEST_STATUS::ACCEPT_FAILED, "server");
     std::string data;
     while (0 == data.length()) {
-        data = std::string(receive_data(accept_sock, response_receive_buffer));
-        std::this_thread::sleep_for(std::chrono::seconds(response_receive_interval));
+        unsigned char *bytes = receive_data(accept_sock, response_receive_buffer, m_sender.using_ssl);
+        data = std::string(reinterpret_cast<char *>(bytes));
+
+        if (0 == data.length())
+            std::this_thread::sleep_for(std::chrono::seconds(response_receive_interval));
     }
     
     RequestObject obj = RequestObject(data);
@@ -98,7 +109,8 @@ std::pair<SYS_UTIL_REQUEST_STATUS, std::string> SenderReceiver::AcceptRequests(c
     ssize_t size = 0;
     while (size == 0) {
         size = m_sender.SendData(accept_sock, response);
-        std::this_thread::sleep_for(std::chrono::seconds(response_send_interval));
+        if (size == 0)
+            std::this_thread::sleep_for(std::chrono::seconds(response_send_interval));
     }
     
     close(accept_sock);
